@@ -37,7 +37,18 @@ RUN mkdir -p storage/framework/sessions \
     storage/framework/cache/data \
     storage/logs \
     bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+    && chmod -R 777 storage bootstrap/cache
+
+# Create start script
+RUN echo '#!/bin/bash\n\
+php artisan config:clear\n\
+php artisan cache:clear\n\
+php artisan migrate --force\n\
+php artisan serve --host=0.0.0.0 --port=${PORT:-8080}' > /app/start.sh \
+    && chmod +x /app/start.sh
 
 # Expose port
 EXPOSE 8080
+
+# Start command
+CMD ["/bin/bash", "/app/start.sh"]
