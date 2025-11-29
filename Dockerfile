@@ -9,10 +9,9 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libpq-dev \
     zip \
-    unzip
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring exif pcntl bcmath gd
@@ -26,27 +25,25 @@ WORKDIR /app
 # Copy composer files first
 COPY composer.json composer.lock ./
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader --no-scripts
+# Install dependencies (without scripts to avoid errors)
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
 # Copy application files
 COPY . .
 
-# Generate optimized autoload
+# Run composer scripts after copying all files
 RUN composer dump-autoload --optimize
 
-# Cache config and routes
-RUN php artisan config:clear
-RUN php artisan route:clear
-RUN php artisan view:clear
+# Create necessary directories and set permissions
+RUN mkdir -p storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache/data \
+    storage/logs \
+    bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
 
-# Create storage directories
-RUN mkdir -p storage/framework/sessions storage/framework/views storage/framework/cache storage/logs
-RUN chmod -R 775 storage bootstrap/cache
-
-# Expose port
+# Expose port (Railway uses PORT env variable)
 EXPOSE 8080
 
-# Start command
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
-
+# Start the application
+CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
