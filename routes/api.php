@@ -11,6 +11,44 @@ Route::get('/health', function () {
     return response()->json(['status' => 'ok', 'timestamp' => now()]);
 });
 
+// Temporary: Seed demo users (remove after first use)
+Route::get('/seed-demo', function () {
+    $umkm = \App\Models\User::firstOrCreate(
+        ['email' => 'test@warung.com'],
+        [
+            'name' => 'Warung Test',
+            'nama_usaha' => 'Warung Test',
+            'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+            'user_type' => 'umkm',
+            'kategori' => 'Makanan',
+            'phone' => '081234567890',
+            'alamat' => 'Jl. Test No. 123, Jakarta',
+        ]
+    );
+    
+    $investor = \App\Models\User::firstOrCreate(
+        ['email' => 'investor@test.com'],
+        [
+            'name' => 'Investor Test',
+            'nama_usaha' => 'Investor Test',
+            'password' => \Illuminate\Support\Facades\Hash::make('password123'),
+            'user_type' => 'investor',
+            'kategori' => 'Investasi',
+            'phone' => '081234567891',
+            'alamat' => 'Jl. Investor No. 456, Jakarta',
+        ]
+    );
+    
+    return response()->json([
+        'success' => true,
+        'message' => 'Demo users created!',
+        'users' => [
+            'umkm' => ['email' => 'test@warung.com', 'password' => 'password123'],
+            'investor' => ['email' => 'investor@test.com', 'password' => 'password123'],
+        ]
+    ]);
+});
+
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
