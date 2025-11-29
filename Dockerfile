@@ -25,6 +25,9 @@ WORKDIR /app
 # Copy all files
 COPY . .
 
+# Make start script executable
+RUN chmod +x /app/start.sh
+
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
 
@@ -39,16 +42,8 @@ RUN mkdir -p storage/framework/sessions \
     bootstrap/cache \
     && chmod -R 777 storage bootstrap/cache
 
-# Create start script
-RUN echo '#!/bin/bash\n\
-php artisan config:clear\n\
-php artisan cache:clear\n\
-php artisan migrate --force\n\
-php artisan serve --host=0.0.0.0 --port=${PORT:-8080}' > /app/start.sh \
-    && chmod +x /app/start.sh
-
 # Expose port
 EXPOSE 8080
 
 # Start command
-CMD ["/bin/bash", "/app/start.sh"]
+CMD ["/app/start.sh"]
