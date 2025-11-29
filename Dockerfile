@@ -22,16 +22,13 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app
 
-# Copy composer files first
-COPY composer.json composer.lock ./
-
-# Install dependencies (without scripts to avoid errors)
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
-
-# Copy application files
+# Copy all files
 COPY . .
 
-# Run composer scripts after copying all files
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+
+# Generate optimized autoload
 RUN composer dump-autoload --optimize
 
 # Create necessary directories and set permissions
@@ -42,8 +39,5 @@ RUN mkdir -p storage/framework/sessions \
     bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Expose port (Railway uses PORT env variable)
+# Expose port
 EXPOSE 8080
-
-# Start the application
-CMD ["sh", "-c", "php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"]
